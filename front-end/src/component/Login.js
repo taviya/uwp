@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
+import { API_BASE_URL } from './common/Constant';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -24,7 +25,7 @@ const Login = () => {
             formData.append('email', email);
             formData.append('password', password);
 
-            const response = await axios.post(`http://localhost:8000/api/login`, formData);
+            const response = await axios.post(`${API_BASE_URL}login`, formData);
 
             localStorage.setItem('token', response.data.accessToken);
             localStorage.setItem('name', response.data.name);

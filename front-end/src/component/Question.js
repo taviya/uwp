@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import axios from "axios";
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom'
+import { API_BASE_URL } from './common/Constant';
 
 const Question = () => {
     const navigate = useNavigate();
@@ -29,7 +30,7 @@ const Question = () => {
             navigate('/login');
         }
         const fetchData = async () => {
-            await axios.get(`http://localhost:8000/api/get_categories`, null, config).then(({ data }) => {
+            await axios.get(`${API_BASE_URL}get_categories`, null, config).then(({ data }) => {
                 setCategory(data.data);
             }).catch(({ response }) => {
                 if (response.status === 422) {
@@ -60,7 +61,7 @@ const Question = () => {
         formData.append('category_id', question.category_id);
         formData.append('answer', question.answer);
     
-        axios.post('http://127.0.0.1:8000/api/add_question', formData, config)
+        axios.post(`${API_BASE_URL}add_question`, formData, config)
             .then(function (response) {
                 setQuestion({
                     question: '',
