@@ -118,4 +118,32 @@ class QuestionAnsController extends Controller
         $question->delete();
         return response()->json(array('status' => TRUE, 'message' => 'Question delete successfully.'));
     }
+
+    /**
+     * API - Create question.
+     */
+    public function addQuestion(Request $request)
+    {
+        $rules = [
+            'question' => 'required',
+            'category_id' => 'required',
+            'answer' => 'required',
+        ];
+
+        $this->validate($request, $rules);
+
+        $question = Question::create([
+            'question' => $request->question,
+            'added_by' => Auth::user()->id,
+            'category_id' => $request->category_id,
+        ]);
+
+        Answer::create([
+            'question_id' => $question->id,
+            'answer' => $request->answer,
+        ]); 
+
+        return response()->json(array('status' => TRUE, 'message' => 'Questin & answer add successfully'));
+    }
+
 }

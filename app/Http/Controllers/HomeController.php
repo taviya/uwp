@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Question;
 use Illuminate\Http\Request;
 use DataTables;
+use Auth;
 
 class HomeController extends Controller
 {
@@ -55,5 +56,35 @@ class HomeController extends Controller
             $category = Category::where('status', 1)->get();
             return view('user.welcome', compact('category'));
         }
+    }
+
+    /**
+     * API - Display a listing of the resource.
+     */
+    public function getQuestionAns(Request $request)
+    {
+        $data = Question::with(['getUser' => function ($query) {
+            $query->select('id', 'name');
+        }, 'getAnswer' => function ($query) {
+            $query->select('id', 'question_id', 'answer');
+        }, 'getCategory' => function ($query) {
+            $query->select('id', 'name');
+        }])->where('status', 1);
+
+        if(isset($request->category_id) && $request->category_id != ''){
+            $data->where('category_id', $request->category_id);
+        }
+
+        if(isset($request->date)){
+            $data->where('created_at', 'like', $request->date."%");
+        }
+
+        if(isset($request->show_own) && $request->show_own){
+            $data->where('added_by', Auth::user()->id);
+        }
+
+        $data = $data->latest()->paginate(10);
+
+        return response()->json(array('status' => TRUE, 'data' => $data));
     }
 }

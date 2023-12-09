@@ -127,4 +127,13 @@ class CategoryController extends Controller
         $category->delete();
         return response()->json(array('status' => TRUE, 'message' => 'Delete successfully.'));
     }
+
+    /**
+     * API - Get category list
+     */
+    public function getCategory(Request $request)
+    {
+        $data = Category::latest()->get();
+        return response()->json(array('status' => TRUE, 'data' => $data));
+    }
 }
