@@ -127,10 +127,15 @@ class QuestionAnsController extends Controller
         $rules = [
             'question' => 'required',
             'category_id' => 'required',
-            'answer' => 'required',
+            'answers' => 'required|array',
+            'answers.*' => 'required',
         ];
 
-        $this->validate($request, $rules);
+        $customMessages = [
+            'answers.*.required' => 'Each answer field is required.',
+        ];
+
+        $this->validate($request, $rules, $customMessages);
 
         $question = Question::create([
             'question' => $request->question,
@@ -138,10 +143,21 @@ class QuestionAnsController extends Controller
             'category_id' => $request->category_id,
         ]);
 
-        Answer::create([
-            'question_id' => $question->id,
-            'answer' => $request->answer,
-        ]); 
+        // Answer::create([
+        //     'question_id' => $question->id,
+        //     'answer' => $request->answer,
+        // ]); 
+
+        if(!empty($request->answers)) {
+            foreach ($request->answers as $ans) {
+                if(!empty($ans)){
+                    Answer::create([
+                        'question_id' => $question->id,
+                        'answer' => $ans,
+                    ]); 
+                }      
+            }
+        }
 
         return response()->json(array('status' => TRUE, 'message' => 'Questin & answer add successfully'));
     }

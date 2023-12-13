@@ -23,7 +23,7 @@ const Header = () => {
                 icon: "success",
                 text: "Logged out successfully!"
             });
-            navigate("/login");
+            navigate("/");
         } catch (error) {
             if (error.response.status === 422) {
                 alert(error.response.data.errors);

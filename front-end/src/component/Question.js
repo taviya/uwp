@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { useLocation } from 'react-router-dom';
 import axios from "axios";
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom'
@@ -10,7 +9,7 @@ const Question = () => {
 
     const [question, setQuestion] = useState({
         question: '',
-        answer: '',
+        answers: [''], // Array to hold answers
         category_id: '',
     });
 
@@ -45,30 +44,48 @@ const Question = () => {
         }
 
         fetchData();
-    }, []);
+    }, [token]);
 
     const handleChange = (e) => {
         const { name, value, type } = e.target;
-        setQuestion({ ...question, [name]: value });
+        if (name === 'answers') {
+            const answers = [...question.answers];
+            answers[parseInt(value.index)] = value.value;
+            setQuestion({ ...question, [name]: answers });
+        } else {
+            setQuestion({ ...question, [name]: value });
+        }
+    };
+
+    const addAnswer = () => {
+        setQuestion({ ...question, answers: [...question.answers, ''] });
+    };
+
+    const removeAnswer = (index) => {
+        const answers = [...question.answers];
+        answers.splice(index, 1);
+        setQuestion({ ...question, answers });
     };
 
     const handleSubmit = (event) => {
         event.preventDefault();
         setIsSubmitting(true);
-
+    
         const formData = new FormData();
         formData.append('question', question.question);
         formData.append('category_id', question.category_id);
-        formData.append('answer', question.answer);
+        question.answers.forEach((answer, index) => {
+            formData.append(`answers[${index}]`, answer);
+        });
     
         axios.post(`${API_BASE_URL}add_question`, formData, config)
             .then(function (response) {
                 setQuestion({
                     question: '',
-                    answer: '',
+                    answers: [''],
                     category_id: '',
                 });
-                
+    
                 Swal.fire({
                     icon: "success",
                     text: response.data.message
@@ -76,18 +93,22 @@ const Question = () => {
                 navigate("/login");
                 setIsSubmitting(false);
             })
-            .catch(({ response }) => {
-                if (response.status === 422) {
-                    setValidationError(response.data.errors)
-                } else {
+            .catch((error) => {
+                if (error.response && error.response.status === 422) {
+                    setValidationError(error.response.data.errors)
+                } else if (error.response) {
                     Swal.fire({
-                        text: response.data.message,
+                        text: error.response.data.message,
                         icon: "error"
-                    })
+                    });
+                } else {
+                    // Handle other types of errors
+                    console.error("Unexpected error:", error);
                 }
                 setIsSubmitting(false);
-            })
-    }    
+            });
+    }
+    
 
     return (
         <>
@@ -124,14 +145,20 @@ const Question = () => {
                                         <option value="">---Select Category---</option>
                                         {
                                             category.map((cat) => {
-                                                return <option value={cat.id}>{cat.name}</option>
+                                                return <option key={cat.id} value={cat.id}>{cat.name}</option>
                                             })
                                         }
                                     </select>
                                 </div>
                                 <div className="form-group">
-                                    <label>Answer:</label>
-                                    <textarea name="answer" className="form-control" cols="30" rows="2" onChange={handleChange}>{question.answer}</textarea>
+                                    <label>Answers:</label>
+                                    {question.answers.map((answer, index) => (
+                                        <div key={index} className="d-flex mb-2">
+                                            <textarea name="answers" className="form-control" placeholder={`Enter answer ${index + 1}`} value={answer} onChange={(e) => handleChange({ target: { name: 'answers', value: { index, value: e.target.value } } })}></textarea>
+                                            <button type="button" className="btn btn-danger ml-2" onClick={() => removeAnswer(index)}>Remove</button>
+                                        </div>
+                                    ))}
+                                    <button type="button" className="btn btn-secondary mt-2" onClick={addAnswer}>Add Answer</button>
                                 </div>
                                 <button type="submit" className="btn btn-primary mt-4" disabled={isSubmitting}>
                                     {isSubmitting ? 'Submitting...' : 'Submit'}
